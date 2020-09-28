@@ -35,20 +35,28 @@ public class ReadSheetDataTool : EditorWindow
 
         if (GUILayout.Button("Banaan"))
         {
-            string[] lines = System.IO.File.ReadAllText(Application.dataPath.Replace("Assets", CSVFileName)).Split('\n');
+            string[] linesArray = System.IO.File.ReadAllText(Application.dataPath.Replace("Assets", CSVFileName)).Split('\n');
 
-            for (int i = 0; i < lines.Length; i++)
+            List<string> EmptyLineFilterList = new List<string>();
+
+            for (int i = 0; i < linesArray.Length; i++)
             {
-
+                if(!string.IsNullOrEmpty(linesArray[i]) && !string.IsNullOrWhiteSpace(linesArray[i]))
+                {
+                    EmptyLineFilterList.Add(linesArray[i]);
+                }
             }
 
-            string[,]  LinesAndRows = new string[lines[0].Split(',').Length, lines.Length];
+            linesArray = null;
+            linesArray = EmptyLineFilterList.ToArray();
 
-            Debug.LogFormat("{0} | {1}", lines[0].Split(',').Length, lines.Length);
+            string[,]  LinesAndRows = new string[linesArray[0].Split(',').Length, linesArray.Length];
+
+            Debug.LogFormat("{0} | {1}", linesArray[0].Split(',').Length, linesArray.Length);
 
             for (int x = 0; x < LinesAndRows.GetLength(0); x++)
             {
-                string[] Y = lines[x].Split(',');
+                string[] Y = linesArray[x].Split(',');
 
                 for (int y = 0; y < LinesAndRows.GetLength(1); y++)
                 {
