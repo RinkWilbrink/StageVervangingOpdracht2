@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using SyntaxTree.VisualStudio.Unity.Bridge;
+using System.Security;
 
 /* IDK
  * 
@@ -17,9 +18,10 @@ public class ReadSheetDataTool : EditorWindow
     // Variable
     private string CSVFileName;
 
-    private string ScriptPath;
+    private string[,] LinesAndRows;
 
-    //private string[,] LinesAndRows;
+    //File Paths
+    private string ScriptPath;
 
     [MenuItem("ReadSheetDataTool/Tool")]
     public static void GetReadSheetDataToolWindow()
@@ -29,6 +31,18 @@ public class ReadSheetDataTool : EditorWindow
 
     private void OnGUI()
     {
+        if (!string.IsNullOrEmpty(CSVFileName) && !string.IsNullOrWhiteSpace(CSVFileName))
+        {
+            try
+            {
+                GetFileName();
+            }
+            catch
+            {
+                SetFileName();
+            }
+        }
+
         GUILayout.Space(6);
 
         CSVFileName = EditorGUILayout.TextField(new GUIContent("CSV File name", ""), CSVFileName);
@@ -52,7 +66,7 @@ public class ReadSheetDataTool : EditorWindow
             linesArray = null;
             linesArray = EmptyLineFilterList.ToArray();
 
-            string[,]  LinesAndRows = new string[linesArray[0].Split(',').Length, linesArray.Length];
+            LinesAndRows = new string[linesArray[0].Split(',').Length, linesArray.Length];
 
             Debug.LogFormat("{0} | {1}", linesArray[0].Split(',').Length, linesArray.Length);
 
@@ -62,12 +76,10 @@ public class ReadSheetDataTool : EditorWindow
 
                 for (int y = 0; y < LinesAndRows.GetLength(1); y++)
                 {
-                    //Debug.Log()
                     try
                     {
                         LinesAndRows[x, y] = Y[y];
-                    }
-                    catch
+                    } catch
                     {
                         //LinesAndRows[x, y] = "";
                         Debug.LogErrorFormat("Error with adding the Y[{1}] to LinesAndRows[{0}, {1}]\n Set {0}, {1} to whitetext! check the Sheet file for empty Cells", x, y);
@@ -84,20 +96,37 @@ public class ReadSheetDataTool : EditorWindow
 
             ReadData();
         }
-    }
-
-    private void SaveFileName()
-    {
-        ScriptPath = AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(this));
 
 
+        if (GUILayout.Button("awda"))
+        {
+            SetFileName();
+        }
     }
 
     private void ReadData()
     {
-        //Debug.Log(LinesAndRows[0, 0]);
-        //Debug.Log(LinesAndRows[1, 0]);
-        //Debug.Log(LinesAndRows[2, 0]);
-        //Debug.Log(LinesAndRows[2, 1]);
+        Debug.Log(LinesAndRows[0, 0]);
+        Debug.Log(LinesAndRows[1, 0]);
+        Debug.Log(LinesAndRows[2, 0]);
+        Debug.Log(LinesAndRows[2, 1]);
     }
+
+    #region Save CSV File name in a text file
+    private void SetFileName()
+    {
+        using (var writer = new System.IO.StreamWriter(AssetDatabase.GetAssetPath(
+        MonoScript.FromScriptableObject(this)).Replace(string.Format("{0}.cs", new ReadSheetDataTool().GetType().Name), "StoreSheetName.txt")))
+        {
+            // Write the text given as parameter and put that text in to the newly created file.
+            writer.WriteLine(CSVFileName);
+        }
+    }
+
+    private void GetFileName()
+    {
+        CSVFileName = System.IO.File.ReadAllText(AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(this)).Replace(
+            string.Format("{0}.cs", new ReadSheetDataTool().GetType().Name), "StoreSheetName.txt"));
+    }
+    #endregion
 }
