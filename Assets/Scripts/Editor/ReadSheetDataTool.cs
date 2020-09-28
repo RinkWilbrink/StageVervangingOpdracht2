@@ -29,23 +29,25 @@ public class ReadSheetDataTool : EditorWindow
 	    GetWindow<ReadSheetDataTool>("ReadSheetDataTool");
     }
 
+    private void Awake()
+    {
+        GetFileName();
+    }
+
     private void OnGUI()
     {
-        if (!string.IsNullOrEmpty(CSVFileName) && !string.IsNullOrWhiteSpace(CSVFileName))
-        {
-            try
-            {
-                GetFileName();
-            }
-            catch
-            {
-                SetFileName();
-            }
-        }
-
         GUILayout.Space(6);
 
+        GUILayout.BeginHorizontal();
+
         CSVFileName = EditorGUILayout.TextField(new GUIContent("CSV File name", ""), CSVFileName);
+
+        if (GUILayout.Button(""))
+        {
+            SetFileName();
+        }
+
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(6);
 
@@ -106,10 +108,10 @@ public class ReadSheetDataTool : EditorWindow
 
     private void ReadData()
     {
-        Debug.Log(LinesAndRows[0, 0]);
-        Debug.Log(LinesAndRows[1, 0]);
-        Debug.Log(LinesAndRows[2, 0]);
-        Debug.Log(LinesAndRows[2, 1]);
+        //Debug.Log(LinesAndRows[0, 0]);
+        //Debug.Log(LinesAndRows[1, 0]);
+        //Debug.Log(LinesAndRows[2, 0]);
+        //Debug.Log(LinesAndRows[2, 1]);
     }
 
     #region Save CSV File name in a text file
