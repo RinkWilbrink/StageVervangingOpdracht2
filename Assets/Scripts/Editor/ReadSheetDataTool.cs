@@ -31,7 +31,7 @@ public class ReadSheetDataTool : EditorWindow
 
     private void Awake()
     {
-        GetFileName();
+        //GetFileName();
     }
 
     private void OnGUI()
@@ -42,10 +42,10 @@ public class ReadSheetDataTool : EditorWindow
 
         CSVFileName = EditorGUILayout.TextField(new GUIContent("CSV File name", ""), CSVFileName);
 
-        if (GUILayout.Button("Save CSV File Name"))
-        {
-            SetFileName();
-        }
+        //if (GUILayout.Button("Save CSV File Name"))
+        //{
+        //    SetFileName();
+        //}
 
         //GUILayout.EndHorizontal();
 
