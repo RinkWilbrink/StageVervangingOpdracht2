@@ -38,16 +38,16 @@ public class ReadSheetDataTool : EditorWindow
     {
         GUILayout.Space(6);
 
-        GUILayout.BeginHorizontal();
+        //GUILayout.BeginHorizontal();
 
         CSVFileName = EditorGUILayout.TextField(new GUIContent("CSV File name", ""), CSVFileName);
 
-        if (GUILayout.Button(""))
+        if (GUILayout.Button("Save CSV File Name"))
         {
             SetFileName();
         }
 
-        GUILayout.EndHorizontal();
+        //GUILayout.EndHorizontal();
 
         GUILayout.Space(6);
 
