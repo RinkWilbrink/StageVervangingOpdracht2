@@ -4,11 +4,29 @@ using UnityEngine;
 using UnityEditor;
 using SyntaxTree.VisualStudio.Unity.Bridge;
 using System.Security;
+using UnityEditorInternal;
 
-/* IDK
- * 
+/* 
  * Editor placement code article
  * https://80.lv/articles/object-placement-tool-for-unity/
+ * 
+ * Poly Brush
+ * https://docs.unity3d.com/Packages/com.unity.polybrush@1.0/manual/index.html
+ * 
+ * Getting Vertex Colour data
+ * https://answers.unity.com/questions/1304791/getting-the-world-position-of-mesh-vertices.html
+ * https://answers.unity.com/questions/1429986/mesh-class-how-do-get-the-color-of-each-vertex.html
+ * 
+ * Find Assets in Editor
+ * https://docs.unity3d.com/ScriptReference/AssetDatabase.FindAssets.html
+ * 
+ * 
+ * 
+ * Enable/DisableGroups
+ * https://docs.unity3d.com/ScriptReference/EditorGUI.BeginDisabledGroup.html
+ * 
+ * Changing GUI colours
+ * https://www.reddit.com/r/Unity3D/comments/88zt5f/how_do_i_change_the_color_of_a_guilayout_button/
  * 
 */
 
@@ -16,9 +34,10 @@ using System.Security;
 public class ReadSheetDataTool : EditorWindow
 {
     // Variable
-    private string CSVFileName;
-
     private string[,] LinesAndRows;
+
+    private TextAsset csvFile;
+    private GameObject worldTerainObject;
 
     //File Paths
     private string ScriptPath;
@@ -29,61 +48,56 @@ public class ReadSheetDataTool : EditorWindow
 	    GetWindow<ReadSheetDataTool>("ReadSheetDataTool");
     }
 
-    private void Awake()
-    {
-        //GetFileName();
-    }
-
     private void OnGUI()
     {
         GUILayout.Space(6);
 
-        //GUILayout.BeginHorizontal();
+        GUILayout.Label("CSV File / Excel Sheet that contains all the data for where and when trees and vegetation will be placed.");
 
-        CSVFileName = EditorGUILayout.TextField(new GUIContent("CSV File name", ""), CSVFileName);
+        csvFile = (TextAsset)EditorGUILayout.ObjectField(csvFile, typeof(TextAsset), true);
 
-        //if (GUILayout.Button("Save CSV File Name"))
-        //{
-        //    SetFileName();
-        //}
+        GUILayout.Space(6);
 
-        //GUILayout.EndHorizontal();
+        GUILayout.Label("Input the Terain GameObject / Floor of what you want the biomes to become!");
+
+        worldTerainObject = (GameObject)EditorGUILayout.ObjectField(worldTerainObject, typeof(GameObject), true);
 
         GUILayout.Space(6);
 
         if (GUILayout.Button("Reading Data From Data Sheet"))
         {
-            string[] linesArray = System.IO.File.ReadAllText(Application.dataPath.Replace("Assets", CSVFileName)).Split('\n');
+            // Read all the text in the File and split it by rows into an array.
+            string[] Rows = System.IO.File.ReadAllText(string.Format("{0}/{1}.csv", Application.dataPath, csvFile.name)).Split('\n');
 
             List<string> EmptyLineFilterList = new List<string>();
 
-            for (int i = 0; i < linesArray.Length; i++)
+            for (int i = 0; i < Rows.Length; i++)
             {
-                if(!string.IsNullOrEmpty(linesArray[i]) && !string.IsNullOrWhiteSpace(linesArray[i]))
+                if(!string.IsNullOrEmpty(Rows[i]) && !string.IsNullOrWhiteSpace(Rows[i]))
                 {
-                    EmptyLineFilterList.Add(linesArray[i]);
+                    EmptyLineFilterList.Add(Rows[i]);
                 }
             }
 
-            linesArray = null;
-            linesArray = EmptyLineFilterList.ToArray();
+            Rows = null;
+            Rows = EmptyLineFilterList.ToArray();
 
-            LinesAndRows = new string[linesArray[0].Split(',').Length, linesArray.Length];
+            LinesAndRows = new string[Rows[0].Split(',').Length, Rows.Length];
 
-            Debug.LogFormat("{0} | {1}", linesArray[0].Split(',').Length, linesArray.Length);
+            //Debug.LogFormat("{0} | {1}", Rows[0].Split(',').Length, Rows.Length);
 
             for (int x = 0; x < LinesAndRows.GetLength(0); x++)
             {
-                string[] Y = linesArray[x].Split(',');
+                string[] Y = Rows[x].Split(',');
 
                 for (int y = 0; y < LinesAndRows.GetLength(1); y++)
                 {
                     try
                     {
                         LinesAndRows[x, y] = Y[y];
-                    } catch
+                    }
+                    catch
                     {
-                        //LinesAndRows[x, y] = "";
                         Debug.LogErrorFormat("Error with adding the Y[{1}] to LinesAndRows[{0}, {1}]\n Set {0}, {1} to whitetext! check the Sheet file for empty Cells", x, y);
 
                         // Reset values to prevent parts of the array to be useable
@@ -91,44 +105,55 @@ public class ReadSheetDataTool : EditorWindow
                         y = LinesAndRows.GetLength(1);
                         LinesAndRows = null;
                     }
-
-                    //Debug.Log(LinesAndRows[x, y]);
                 }
             }
 
-            ReadData();
+            ReadColourData();
         }
 
+        GUILayout.Space(6);
 
-        if (GUILayout.Button("awda"))
+        EditorGUI.BeginDisabledGroup(LinesAndRows == null);
+
+        if(LinesAndRows == null)
         {
-            SetFileName();
+            if(GUILayout.Button("LinesAndRowes is NULL, Button has been disabled!")) { }
         }
-    }
-
-    private void ReadData()
-    {
-        //Debug.Log(LinesAndRows[0, 0]);
-        //Debug.Log(LinesAndRows[1, 0]);
-        //Debug.Log(LinesAndRows[2, 0]);
-        //Debug.Log(LinesAndRows[2, 1]);
-    }
-
-    #region Save CSV File name in a text file
-    private void SetFileName()
-    {
-        using (var writer = new System.IO.StreamWriter(AssetDatabase.GetAssetPath(
-        MonoScript.FromScriptableObject(this)).Replace(string.Format("{0}.cs", new ReadSheetDataTool().GetType().Name), "StoreSheetName.txt")))
+        else
         {
-            // Write the text given as parameter and put that text in to the newly created file.
-            writer.WriteLine(CSVFileName);
+            if (GUILayout.Button("Start Vegetation Placement"))
+            {
+                Debug.Log("Cool!");
+            }
         }
+
+        EditorGUI.EndDisabledGroup();
     }
 
-    private void GetFileName()
+    private void ReadColourData()
     {
-        CSVFileName = System.IO.File.ReadAllText(AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(this)).Replace(
-            string.Format("{0}.cs", new ReadSheetDataTool().GetType().Name), "StoreSheetName.txt"));
+        MeshFilter mf = worldTerainObject.GetComponent<MeshFilter>();
+        Mesh mesh = mf.sharedMesh;
+
+        Color32[] Colours = mesh.colors32;
+
+        Matrix4x4 localToWorld = worldTerainObject.transform.localToWorldMatrix;
+
+        for (int i = 0; i < mesh.vertices.Length; ++i)
+        {
+            Vector3 world_v = localToWorld.MultiplyPoint3x4(mesh.vertices[i]);
+
+            //Debug.LogFormat("i={0}, r={1}, g={2}, b={3}, a={4}", i, Colours[i].r, Colours[i].g, Colours[i].b, Colours[i].a);
+        }
     }
-    #endregion
+}
+
+class HoldVegetationObjectData
+{
+    // Variables
+    public string VegetationName = "";
+    public string AssetPath = "";
+
+    public Color BiomesColour = Color.black;
+    public int Thickness = 0;
 }
