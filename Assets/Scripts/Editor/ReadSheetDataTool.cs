@@ -2,9 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using SyntaxTree.VisualStudio.Unity.Bridge;
-using System.Security;
-using UnityEditorInternal;
 
 /* 
  * Editor placement code article
@@ -110,6 +107,7 @@ public class ReadSheetDataTool : EditorWindow
 
                     // Create Data
                     HoldVegetationObjectData data = new HoldVegetationObjectData() {
+                        Name = split[0],
                         BiomesColour = currentColour,
                         type = split[2],
                         AssetPath = split[3],
@@ -118,7 +116,8 @@ public class ReadSheetDataTool : EditorWindow
 
                     Debug.Log(data.AssetPath);
 
-                    PlaceObject((GameObject)AssetDatabase.LoadAssetAtPath(data.AssetPath, typeof(GameObject)), /*Placeholder for the position*/Vector3.zero, data);
+                    // THIS CODE SHOULD BE PLACED IN A FOR LOOP THAT GOES THROUGH ALL VERTECES OR POSITIONS WHERE SHIT SHOULD BE PLACED, A.K.A MOVE THIS FUNCTION!!!
+                    PlaceObject((GameObject)AssetDatabase.LoadAssetAtPath(data.AssetPath.TrimEnd(), typeof(GameObject)), /*Placeholder for the position*/Vector3.zero, data);
 
                     // Cleanup local variables
                     data = null;
