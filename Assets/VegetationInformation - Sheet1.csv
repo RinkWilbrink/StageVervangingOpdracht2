@@ -1,4 +1,6 @@
-Name,Colour,Thickness,Asset Path / Name
-Oak Tree,Green,5,
-Spruce Tree,DarkGreen,6,
-Jungle Tree,Blue,10,
+Name,Colour,Thickness,AssetName
+OakTree,Green,5,a
+SpruceTree,DarkGreen,6,b
+JungleTree,Blue,10,c
+BirchTree,Green,4,d
+RedwoodTree,Red,6,e

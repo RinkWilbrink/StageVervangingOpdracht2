@@ -39,8 +39,9 @@ public class ReadSheetDataTool : EditorWindow
     private TextAsset csvFile;
     private GameObject worldTerainObject;
 
-    //File Paths
-    private string ScriptPath;
+    // 
+    //private Dictionary<string, HoldVegetationObjectData> vegetationDictionairy = new Dictionary<string, HoldVegetationObjectData>();
+    private List<HoldVegetationObjectData> vegetationList = new List<HoldVegetationObjectData>();
 
     [MenuItem("ReadSheetDataTool/Tool")]
     public static void GetReadSheetDataToolWindow()
@@ -64,51 +65,11 @@ public class ReadSheetDataTool : EditorWindow
 
         GUILayout.Space(6);
 
-        if (GUILayout.Button("Reading Data From Data Sheet"))
+        if (GUILayout.Button("Read Data From The Data Sheet"))
         {
-            // Read all the text in the File and split it by rows into an array.
-            string[] Rows = System.IO.File.ReadAllText(string.Format("{0}/{1}.csv", Application.dataPath, csvFile.name)).Split('\n');
+            ReadSheetData();
 
-            List<string> EmptyLineFilterList = new List<string>();
-
-            for (int i = 0; i < Rows.Length; i++)
-            {
-                if(!string.IsNullOrEmpty(Rows[i]) && !string.IsNullOrWhiteSpace(Rows[i]))
-                {
-                    EmptyLineFilterList.Add(Rows[i]);
-                }
-            }
-
-            Rows = null;
-            Rows = EmptyLineFilterList.ToArray();
-
-            LinesAndRows = new string[Rows[0].Split(',').Length, Rows.Length];
-
-            //Debug.LogFormat("{0} | {1}", Rows[0].Split(',').Length, Rows.Length);
-
-            for (int x = 0; x < LinesAndRows.GetLength(0); x++)
-            {
-                string[] Y = Rows[x].Split(',');
-
-                for (int y = 0; y < LinesAndRows.GetLength(1); y++)
-                {
-                    try
-                    {
-                        LinesAndRows[x, y] = Y[y];
-                    }
-                    catch
-                    {
-                        Debug.LogErrorFormat("Error with adding the Y[{1}] to LinesAndRows[{0}, {1}]\n Set {0}, {1} to whitetext! check the Sheet file for empty Cells", x, y);
-
-                        // Reset values to prevent parts of the array to be useable
-                        x = LinesAndRows.GetLength(0);
-                        y = LinesAndRows.GetLength(1);
-                        LinesAndRows = null;
-                    }
-                }
-            }
-
-            ReadColourData();
+            ReadVertexColourData();
         }
 
         GUILayout.Space(6);
@@ -130,7 +91,74 @@ public class ReadSheetDataTool : EditorWindow
         EditorGUI.EndDisabledGroup();
     }
 
-    private void ReadColourData()
+    private void ReadSheetData()
+    {
+        // Read all the text in the File and split it by rows into an array.
+        string[] Rows = System.IO.File.ReadAllText(string.Format("{0}/{1}.csv", Application.dataPath, csvFile.name)).Split('\n');
+
+        List<string> EmptyLineFilterList = new List<string>();
+
+        for (int i = 0; i < Rows.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(Rows[i]) && !string.IsNullOrWhiteSpace(Rows[i]))
+            {
+                if (Rows[i].Contains("Name,Colour") == false)
+                {
+                    //EmptyLineFilterList.Add(Rows[i]);
+
+                    // Local Variables
+                    string[] split = Rows[i].Split(',');
+
+                    Color currentColour = Color.black; ColorUtility.TryParseHtmlString(split[1], out currentColour);
+
+                    // Create Data
+                    HoldVegetationObjectData data = new HoldVegetationObjectData() { 
+                        BiomesColour = currentColour, 
+                        Thickness = int.Parse(split[2]),
+                        AssetPath = split[3],
+                    };
+
+                    //Debug.LogFormat("{0} | {1} | {2}", data.BiomesColour, data.Thickness, data.AssetPath);
+
+                    //vegetationDictionairy.Add(split[0], data);
+                    vegetationList.Add(data);
+
+                    // Cleanup local variables
+                    data = null;
+                    split = null;
+                }
+            }
+        }
+
+        Rows = null;
+        /*Rows = EmptyLineFilterList.ToArray();
+         * 
+        LinesAndRows = new string[Rows.Length, Rows[0].Split(',').Length];
+
+        for (int x = 0; x < Rows.Length; x++)
+        {
+            string[] Y = Rows[x].Split(',');
+
+            for (int y = 0; y < LinesAndRows.GetLength(1); y++)
+            {
+                try
+                {
+                    LinesAndRows[x, y] = Y[y];
+                }
+                catch
+                {
+                    Debug.LogErrorFormat("Error with adding the Y[{1}] to LinesAndRows[{0}, {1}]\n Set {0}, {1} to whitetext! check the Sheet file for empty Cells", x, y);
+
+                    // Reset values to prevent parts of the array to be useable
+                    x = LinesAndRows.GetLength(0);
+                    y = LinesAndRows.GetLength(1);
+                    LinesAndRows = null;
+                }
+            }
+        }*/
+    }
+
+    private void ReadVertexColourData()
     {
         MeshFilter mf = worldTerainObject.GetComponent<MeshFilter>();
         Mesh mesh = mf.sharedMesh;
@@ -142,8 +170,6 @@ public class ReadSheetDataTool : EditorWindow
         for (int i = 0; i < mesh.vertices.Length; ++i)
         {
             Vector3 world_v = localToWorld.MultiplyPoint3x4(mesh.vertices[i]);
-
-            //Debug.LogFormat("i={0}, r={1}, g={2}, b={3}, a={4}", i, Colours[i].r, Colours[i].g, Colours[i].b, Colours[i].a);
         }
     }
 }
@@ -151,7 +177,7 @@ public class ReadSheetDataTool : EditorWindow
 class HoldVegetationObjectData
 {
     // Variables
-    public string VegetationName = "";
+    public string Name = "";
     public string AssetPath = "";
 
     public Color BiomesColour = Color.black;
