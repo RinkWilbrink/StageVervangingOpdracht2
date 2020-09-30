@@ -1,6 +1,6 @@
-Name,Colour,Thickness,AssetName
-OakTree,Green,5,a
-SpruceTree,DarkGreen,6,b
-JungleTree,Blue,10,c
-BirchTree,Green,4,d
-RedwoodTree,Red,6,e
+Name,Colour,Type,AssetPath
+OakTree,Green,tree,Assets\polyperfect\Low Poly Ultimate Pack\M\- Prefabs_M\Nature_M\Trees\tree-oak.prefab
+cactus,Yellow,tree,Assets\polyperfect\Low Poly Ultimate Pack\M\- Prefabs_M\Nature_M\Trees\cactus-basic.prefab
+BirchTree,Blue,tree,Assets\polyperfect\Low Poly Ultimate Pack\M\- Prefabs_M\Nature_M\Trees\tree-birch.prefab
+TreeForest,Green,tree,Assets\polyperfect\Low Poly Ultimate Pack\M\- Prefabs_M\Nature_M\Trees\tree-forest.prefab
+SpruceTree,Red,tree,Assets\polyperfect\Low Poly Ultimate Pack\M\- Prefabs_M\Nature_M\Trees\tree-spruce.prefab

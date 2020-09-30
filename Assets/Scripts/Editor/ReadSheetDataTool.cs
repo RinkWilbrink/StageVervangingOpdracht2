@@ -40,7 +40,6 @@ public class ReadSheetDataTool : EditorWindow
     private GameObject worldTerainObject;
 
     // 
-    //private Dictionary<string, HoldVegetationObjectData> vegetationDictionairy = new Dictionary<string, HoldVegetationObjectData>();
     private List<HoldVegetationObjectData> vegetationList = new List<HoldVegetationObjectData>();
 
     [MenuItem("ReadSheetDataTool/Tool")]
@@ -104,24 +103,22 @@ public class ReadSheetDataTool : EditorWindow
             {
                 if (Rows[i].Contains("Name,Colour") == false)
                 {
-                    //EmptyLineFilterList.Add(Rows[i]);
-
                     // Local Variables
                     string[] split = Rows[i].Split(',');
 
                     Color currentColour = Color.black; ColorUtility.TryParseHtmlString(split[1], out currentColour);
 
                     // Create Data
-                    HoldVegetationObjectData data = new HoldVegetationObjectData() { 
-                        BiomesColour = currentColour, 
-                        Thickness = int.Parse(split[2]),
+                    HoldVegetationObjectData data = new HoldVegetationObjectData() {
+                        BiomesColour = currentColour,
+                        type = split[2],
                         AssetPath = split[3],
                     };
-
-                    //Debug.LogFormat("{0} | {1} | {2}", data.BiomesColour, data.Thickness, data.AssetPath);
-
-                    //vegetationDictionairy.Add(split[0], data);
                     vegetationList.Add(data);
+
+                    Debug.Log(data.AssetPath);
+
+                    PlaceObject((GameObject)AssetDatabase.LoadAssetAtPath(data.AssetPath, typeof(GameObject)), /*Placeholder for the position*/Vector3.zero, data);
 
                     // Cleanup local variables
                     data = null;
@@ -131,31 +128,8 @@ public class ReadSheetDataTool : EditorWindow
         }
 
         Rows = null;
-        /*Rows = EmptyLineFilterList.ToArray();
-         * 
-        LinesAndRows = new string[Rows.Length, Rows[0].Split(',').Length];
 
-        for (int x = 0; x < Rows.Length; x++)
-        {
-            string[] Y = Rows[x].Split(',');
-
-            for (int y = 0; y < LinesAndRows.GetLength(1); y++)
-            {
-                try
-                {
-                    LinesAndRows[x, y] = Y[y];
-                }
-                catch
-                {
-                    Debug.LogErrorFormat("Error with adding the Y[{1}] to LinesAndRows[{0}, {1}]\n Set {0}, {1} to whitetext! check the Sheet file for empty Cells", x, y);
-
-                    // Reset values to prevent parts of the array to be useable
-                    x = LinesAndRows.GetLength(0);
-                    y = LinesAndRows.GetLength(1);
-                    LinesAndRows = null;
-                }
-            }
-        }*/
+        Debug.Log("LOL!");
     }
 
     private void ReadVertexColourData()
@@ -172,6 +146,12 @@ public class ReadSheetDataTool : EditorWindow
             Vector3 world_v = localToWorld.MultiplyPoint3x4(mesh.vertices[i]);
         }
     }
+
+    private void PlaceObject(GameObject prefab, Vector3 position, HoldVegetationObjectData data)
+    {
+        GameObject gameObject = Instantiate(prefab, position, Quaternion.identity);
+        gameObject.name = data.Name;
+    }
 }
 
 class HoldVegetationObjectData
@@ -181,5 +161,5 @@ class HoldVegetationObjectData
     public string AssetPath = "";
 
     public Color BiomesColour = Color.black;
-    public int Thickness = 0;
+    public string type = "";
 }
