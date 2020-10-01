@@ -37,12 +37,12 @@ public class ReadSheetDataTool : EditorWindow
     private GameObject worldTerainObject;
 
     // 
-    private List<HoldVegetationObjectData> vegetationList = new List<HoldVegetationObjectData>();
+    private Dictionary<string, List<VegetationData>> vegetationDictionairy = new Dictionary<string, List<VegetationData>>();
 
     [MenuItem("ReadSheetDataTool/Tool")]
     public static void GetReadSheetDataToolWindow()
     {
-	    GetWindow<ReadSheetDataTool>("ReadSheetDataTool");
+        GetWindow<ReadSheetDataTool>("ReadSheetDataTool");
     }
 
     private void OnGUI()
@@ -61,11 +61,11 @@ public class ReadSheetDataTool : EditorWindow
 
         GUILayout.Space(6);
 
-        if (GUILayout.Button("Read Data From The Data Sheet"))
+        if(GUILayout.Button("Read Data From The Data Sheet"))
         {
             ReadSheetData();
 
-            ReadVertexColourData();
+            //ReadVertexColourData();
         }
 
         GUILayout.Space(6);
@@ -78,7 +78,7 @@ public class ReadSheetDataTool : EditorWindow
         }
         else
         {
-            if (GUILayout.Button("Start Vegetation Placement"))
+            if(GUILayout.Button("Start Vegetation Placement"))
             {
                 Debug.Log("Cool!");
             }
@@ -94,30 +94,51 @@ public class ReadSheetDataTool : EditorWindow
 
         List<string> EmptyLineFilterList = new List<string>();
 
-        for (int i = 0; i < Rows.Length; i++)
+        for(int i = 0; i < Rows.Length; i++)
         {
-            if (!string.IsNullOrEmpty(Rows[i]) && !string.IsNullOrWhiteSpace(Rows[i]))
+            if(!string.IsNullOrEmpty(Rows[i]) && !string.IsNullOrWhiteSpace(Rows[i]))
             {
-                if (Rows[i].Contains("Name,Colour") == false)
+                if(Rows[i].Contains("Name,Colour") == false)
                 {
                     // Local Variables
                     string[] split = Rows[i].Split(',');
 
-                    Color currentColour = Color.black; ColorUtility.TryParseHtmlString(split[1], out currentColour);
+                    Color currentColour = Color.black;
+                    ColorUtility.TryParseHtmlString(split[1], out currentColour);
 
                     // Create Data
-                    HoldVegetationObjectData data = new HoldVegetationObjectData() {
+                    VegetationData data = new VegetationData()
+                    {
                         Name = split[0],
                         BiomesColour = currentColour,
                         type = split[2],
                         AssetPath = split[3],
+                        VegetationThickness = int.Parse(split[4])
                     };
-                    vegetationList.Add(data);
 
-                    Debug.Log(data.AssetPath);
+                    // If the current Type doesnt exist yet, create a new TKey in de Dictionairy, if it does exist add the new DATA variable into the list.
+                    if(vegetationDictionairy.ContainsKey(split[2]))
+                    {
+                        List<VegetationData> OldList = new List<VegetationData>();
+                        vegetationDictionairy.TryGetValue(split[2], out OldList);
 
-                    // THIS CODE SHOULD BE PLACED IN A FOR LOOP THAT GOES THROUGH ALL VERTECES OR POSITIONS WHERE SHIT SHOULD BE PLACED, A.K.A MOVE THIS FUNCTION!!!
-                    PlaceObject((GameObject)AssetDatabase.LoadAssetAtPath(data.AssetPath.TrimEnd(), typeof(GameObject)), /*Placeholder for the position*/Vector3.zero, data);
+                        OldList.Add(data);
+
+                        vegetationDictionairy[split[2]] = OldList;
+
+                        for(int x = 0; x < OldList.Count; x++)
+                        {
+                            Debug.LogFormat("x={0} | OL={1}", x, OldList[x].Name);
+                        }
+                    }
+                    else
+                    {
+                        List<VegetationData> vegData = new List<VegetationData>();
+                        vegData.Add(data);
+                        vegetationDictionairy.Add(split[2], vegData);
+
+                        Debug.Log("New TKey!");
+                    }
 
                     // Cleanup local variables
                     data = null;
@@ -127,8 +148,6 @@ public class ReadSheetDataTool : EditorWindow
         }
 
         Rows = null;
-
-        Debug.Log("LOL!");
     }
 
     private void ReadVertexColourData()
@@ -136,24 +155,55 @@ public class ReadSheetDataTool : EditorWindow
         MeshFilter mf = worldTerainObject.GetComponent<MeshFilter>();
         Mesh mesh = mf.sharedMesh;
 
-        Color32[] Colours = mesh.colors32;
+        Color[] Colours = mesh.colors;
 
         Matrix4x4 localToWorld = worldTerainObject.transform.localToWorldMatrix;
 
-        for (int i = 0; i < mesh.vertices.Length; ++i)
+        GameObject Parent = new GameObject();
+        Parent.name = "Vegetation Parent";
+
+        for(int i = 0; i < mesh.vertices.Length; ++i)
         {
             Vector3 world_v = localToWorld.MultiplyPoint3x4(mesh.vertices[i]);
+
+            /* REWORK THIS PIECE OF CODE TO WORK WITH A DICTIONAIRY, SMALL BUT IMPORTANT CHANGES NEEDED FOR IT TO WORK THE SAME. 
+            
+            for(int x = 0; x < vegetationList.Count; x++)
+            {
+                if(vegetationList[x].BiomesColour == Colours[i])
+                {
+                    float cool = CalculateBiomeFloat(world_v.x, world_v.z, 11f, 11f, 1f, 12345f);
+            
+                    if(Random.Range(0, 10) <= (vegetationList[x].VegetationThickness))
+                    {
+                        PlaceObject(vegetationList[x], world_v, Parent);
+                    }
+                }
+            }
+            */
         }
     }
 
-    private void PlaceObject(GameObject prefab, Vector3 position, HoldVegetationObjectData data)
+    private float CalculateBiomeFloat(float _x, float _y, float _width, float _height, float _scale, float _worldSeed)
     {
-        GameObject gameObject = Instantiate(prefab, position, Quaternion.identity);
-        gameObject.name = data.Name;
+        float xCoord = (_x + _worldSeed) / _width * _scale;
+        float yCoord = (_y + _worldSeed) / _height * _scale;
+
+        return Mathf.PerlinNoise(xCoord, yCoord);
+    }
+
+    private void PlaceObject(VegetationData data, Vector3 position, GameObject parent)
+    {
+        GameObject newVegetation = Instantiate((GameObject)AssetDatabase.LoadAssetAtPath(data.AssetPath.TrimEnd(), typeof(GameObject)),
+            new Vector3(position.x + Random.Range(-1f, 1f), position.y, position.z + Random.Range(-1f, 1f)), Quaternion.identity);
+
+        // Set new Vegetation Object attributes
+        newVegetation.name = data.Name;
+        newVegetation.transform.parent = parent.transform;
     }
 }
 
-class HoldVegetationObjectData
+class VegetationData
 {
     // Variables
     public string Name = "";
@@ -161,4 +211,6 @@ class HoldVegetationObjectData
 
     public Color BiomesColour = Color.black;
     public string type = "";
+
+    public int VegetationThickness = 0;
 }
