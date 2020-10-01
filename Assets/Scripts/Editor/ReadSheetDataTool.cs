@@ -31,7 +31,7 @@ using UnityEditor;
 public class ReadSheetDataTool : EditorWindow
 {
     // Variable
-    private string[,] LinesAndRows;
+    //private string[,] LinesAndRows;
 
     private TextAsset csvFile;
     private GameObject worldTerainObject;
@@ -63,6 +63,8 @@ public class ReadSheetDataTool : EditorWindow
 
         if(GUILayout.Button("Read Data From The Data Sheet"))
         {
+            ClearVariableData();
+
             ReadSheetData();
 
             //ReadVertexColourData();
@@ -70,21 +72,20 @@ public class ReadSheetDataTool : EditorWindow
 
         GUILayout.Space(6);
 
-        EditorGUI.BeginDisabledGroup(LinesAndRows == null);
-
-        if(LinesAndRows == null)
-        {
-            if(GUILayout.Button("LinesAndRowes is NULL, Button has been disabled!")) { }
-        }
-        else
-        {
-            if(GUILayout.Button("Start Vegetation Placement"))
-            {
-                Debug.Log("Cool!");
-            }
-        }
-
-        EditorGUI.EndDisabledGroup();
+        //EditorGUI.BeginDisabledGroup(LinesAndRows == null);
+        //
+        //if(LinesAndRows == null)
+        //{
+        //    if(GUILayout.Button("LinesAndRowes is NULL, Button has been disabled!")) { }
+        //}
+        //else
+        //{
+        //    if(GUILayout.Button("Start Vegetation Placement"))
+        //    {
+        //        Debug.Log("Cool!");
+        //    }
+        //}
+        //EditorGUI.EndDisabledGroup();
     }
 
     private void ReadSheetData()
@@ -137,7 +138,7 @@ public class ReadSheetDataTool : EditorWindow
                         vegData.Add(data);
                         vegetationDictionairy.Add(split[2], vegData);
 
-                        Debug.Log("New TKey!");
+                        Debug.LogFormat("New TKey! {0}", split[2]);
                     }
 
                     // Cleanup local variables
@@ -146,8 +147,16 @@ public class ReadSheetDataTool : EditorWindow
                 }
             }
         }
-
         Rows = null;
+    }
+
+    private void ClearVariableData()
+    {
+        // Clear up / empty variables and Lists/Dictionairies
+        vegetationDictionairy = null;
+
+        // Initialize Variables that need to be to be used again.
+        vegetationDictionairy = new Dictionary<string, List<VegetationData>>();
     }
 
     private void ReadVertexColourData()
